@@ -118,6 +118,8 @@ class game:
 	
 		self.gameState[adjacentPos[0]][adjacentPos[1]] = 0	
 		self.gameState[oldPos[0]][oldPos[1]] = 0
-		
+	
+		self.trace.append(oldPos)
+		self.trace.append(newPos)	
 
 		return self.gameState	
