@@ -3,6 +3,7 @@ import config
 import sys
 import copy
 
+
 def ItrDeepSearch(pegSolitaireObject):
 	#################################################
 	# Must use functions:
@@ -28,20 +29,19 @@ def ItrDeepSearch(pegSolitaireObject):
 	gameState = pegSolitaireObject.gameState
 	
 	#getting possible start states for the initial configuration of game
-	startStates = getStartStates(gameState)
 	
-	for startPos in startStates:
+	stackGS = []
+	
+	#for startPos in startStates:
 		#pegSolitaireObject = copySolitaireObject
-		for depth in range(10):
-			flag = playGame(pegSolitaireObject, startPos, gameState, depth)
-			if flag == 1:
-				return True
-			if flag == -1:
-				print "return -1...."	
-				break;
-			print "return 0..."
-		pegSolitaireObject = copySolitaireObject
-			
+	for depth in range(10):
+			#flag = playGame(pegSolitaireObject, startPos, gameState, depth)
+		flag = playGameNew(pegSolitaireObject, depth, stackGS)
+		if flag == 1:
+			return True
+		if flag == 0:
+			del stackGS[:]
+						
 	
 	return True
 
@@ -57,58 +57,81 @@ def getStartStates(gameState):
 	return startStates
 
 
+def playGameNew(pegSolitaireObject, depth, stackGS):
+	if check_goal_state(pegSolitaireObject.gameState) :
+		print "getting goal state...."
+		return 1
+	elif depth == 0:	
+		return 0
+	
+	result = 0
+	for i in range(7):
+		for j in range(7):
+			if pegSolitaireObject.gameState[i][j] == 1:
+				for direction in config.DIRECTION:
+					print "checking valid move for depth",i, j, depth
+					flag = pegSolitaireObject.is_validMove([i, j], config.DIRECTION[direction])	
+					if flag == True:
+						pegSolitaireCopy = copy.deepcopy(pegSolitaireObject)
+						print "initial state ", pegSolitaireCopy.gameState
+						pegSolitaireCopy.getNextState([i, j], config.DIRECTION[direction])
+						print "updated state ", pegSolitaireCopy.gameState
+						#stackGSi.append(pegSolitaireCopy)
+						result = playGameNew(pegSolitaireCopy, depth-1, stackGS)
+						pegSolitaireObject.nodesExpanded = pegSolitaireCopy.nodesExpanded 
+										
+		
+						if result == 1:	
+							pegSolitaireObject.trace = pegSolitaireCopy.trace						
+							return 1
+						
 
-def playGame(pegSolitaireObject, startPos, prevGameState, depth):
+
+
+	return result
+
+'''
+def playGame(pegSolitaireObject, depth):
 	print "depth ", depth		
 	result_flag = -1;
 
 	if check_goal_state(pegSolitaireObject.gameState) :
 		return 1
-	elif depth == 0:
-	
-		print "backtracking to old state ", prevGameState
-		print "current state ", pegSolitaireObject.gameState
-		pegSolitaireObject.gameState = prevGameState
-		
+	elif pegSolitaireObject.gameState == None:
+		return -1
+	elif depth == 0:	
 		return 0
 	else:
-		for direction in config.DIRECTION:
-			print "direction ", config.DIRECTION[direction][0], config.DIRECTION[direction][1]
-			
-			
-			prevGameState = copy.deepcopy(pegSolitaireObject.gameState)
-			newGameState = pegSolitaireObject.getNextState(startPos, config.DIRECTION[direction])
-			print "updated state ", newGameState
-			if newGameState != None:
-				print "next state ", startPos[0], startPos[1]
-				states = getStartStates(newGameState)
-				#trace = {startPos}
+		
+		newGameState = pegSolitaireObject.getNextState(startPos, direction)
 
-				for s in states:
-					result_flag = playGame(pegSolitaireObject, s, prevGameState, depth-1)
-					if result_flag == 1:
-						return 1
+
+		playGame(pegSolitaireObject, startPos, config.DIRECTION['N'], depth)
+		playGame(pegSolitaireObject, startPos, config.DIRECTION['S'], depth)
+		playGame(pegSolitaireObject, startPos, config.DIRECTION['E'], depth)
+		playGame(pegSolitaireObject, startPos, config.DIRECTION['W'], depth)
+		
+
+		if newGameState != None:
+			print "next state ", startPos[0], startPos[1]
+
+		states = getStartStates(newGameState)
+				#trace = {startPos}
+		for s in states:
+			playGame(pegSolitaireObject, s, config.DIRECTION['N'], depth-1)
+			playGame(pegSolitaireObject, s, config.DIRECTION['S'], depth-1)
+			playGame(pegSolitaireObject, s, config.DIRECTION['E'], depth-1)
+			playGame(pegSolitaireObject, s, config.DIRECTION['W'], depth-1)
+
+
+			if result_flag == 1:
+				return 1
 		
 
 		#states = getStartStates(gameState)
-	'''	
-		if len(states) == 0 : return -1
-		
-
-		for s in states:
-			#update trace with startPos
-			#call util nextState that updates game state
-			# newGameState
-			for direction in config.DIRECTION:
-				newGameState = pegSolitaireUtils.getNextState(s, direction) 			
-			
-			result_flag = playGame(s, newGameState, depth-1)
-			if result_flag:
-				return 1
-	'''
 
 	return result_flag
-
+'''
 
 def check_goal_state(gameState):
 	
