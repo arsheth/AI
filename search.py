@@ -2,7 +2,7 @@ import pegSolitaireUtils
 import config
 import sys
 import copy
-
+import Queue
 
 def ItrDeepSearch(pegSolitaireObject):
 	#################################################
@@ -34,7 +34,7 @@ def ItrDeepSearch(pegSolitaireObject):
 	
 	#for startPos in startStates:
 		#pegSolitaireObject = copySolitaireObject
-	for depth in range(10):
+	for depth in range(10000):
 			#flag = playGame(pegSolitaireObject, startPos, gameState, depth)
 		flag = playGameNew(pegSolitaireObject, depth, stackGS)
 		if flag == 1:
@@ -90,60 +90,34 @@ def playGameNew(pegSolitaireObject, depth, stackGS):
 
 	return result
 
-'''
-def playGame(pegSolitaireObject, depth):
-	print "depth ", depth		
-	result_flag = -1;
+def heuristic(pegSolitaireObject):
 
-	if check_goal_state(pegSolitaireObject.gameState) :
-		return 1
-	elif pegSolitaireObject.gameState == None:
-		return -1
-	elif depth == 0:	
-		return 0
-	else:
-		
-		newGameState = pegSolitaireObject.getNextState(startPos, direction)
-
-
-		playGame(pegSolitaireObject, startPos, config.DIRECTION['N'], depth)
-		playGame(pegSolitaireObject, startPos, config.DIRECTION['S'], depth)
-		playGame(pegSolitaireObject, startPos, config.DIRECTION['E'], depth)
-		playGame(pegSolitaireObject, startPos, config.DIRECTION['W'], depth)
-		
-
-		if newGameState != None:
-			print "next state ", startPos[0], startPos[1]
-
-		states = getStartStates(newGameState)
-				#trace = {startPos}
-		for s in states:
-			playGame(pegSolitaireObject, s, config.DIRECTION['N'], depth-1)
-			playGame(pegSolitaireObject, s, config.DIRECTION['S'], depth-1)
-			playGame(pegSolitaireObject, s, config.DIRECTION['E'], depth-1)
-			playGame(pegSolitaireObject, s, config.DIRECTION['W'], depth-1)
-
-
-			if result_flag == 1:
-				return 1
-		
-
-		#states = getStartStates(gameState)
-
-	return result_flag
-'''
-
-def check_goal_state(gameState):
-	
+	count = 0
 	for i in range(7):
 		for j in range(7):
-			if gameState[i][j] == 1:
-				if i != 3 and j != 3:
-					return False
+			if pegSolitaireObject.gameState[i][j] == 1:
+				for direction in config.DIRECTION:
+					flag = pegSolitaireObject.is_validMove([i, j], config.DIRECTION[direction])	
+					if flag == True:
+						count = count + 1
+	
+	return count
+
+
+def check_goal_state(gameState):
+
+	print "in check goal state", gameState	
+	for i in range(7):
+		for j in range(7):
+			if gameState[i][j] == 1 :
+				#if i < 3 or j < 3 or i > 3 or j > 3:
+				if i != 3 or j != 3:
+					return False				
 			
 	if gameState[3][3] == 0:
 		return False
 	
+	print "returning true..."
 	return True
 
 
@@ -168,7 +142,45 @@ def aStarOne(pegSolitaireObject):
         # SEE example in the PDF to see what to return
         #
         #################################################
-	return True	
+	
+
+	pq = Queue.PriorityQueue()
+	pq.put((0, pegSolitaireObject))
+
+	print "initial state", pegSolitaireObject.gameState
+
+	while not pq.empty():
+		
+		array_pq = pq.get()
+		print "popped state ",array_pq[1].gameState
+		print "value ", array_pq[0] 
+		pegSolitaireTemp = array_pq[1]	
+
+		if check_goal_state(pegSolitaireTemp.gameState):
+			print "node expanded in temp ", pegSolitaireTemp.nodesExpanded
+			pegSolitaireObject.nodesExpanded = pegSolitaireTemp.nodesExpanded
+			pegSolitaireObject.trace = pegSolitaireTemp.trace
+			return True
+
+		for i in range(7):
+			for j in range(7):
+				if pegSolitaireTemp.gameState[i][j] == 1:
+					for direction in config.DIRECTION:
+						pegSolitaireCopy = copy.deepcopy(pegSolitaireTemp)
+						flag = pegSolitaireCopy.is_validMove([i, j], config.DIRECTION[direction])
+                                        	if flag == True:				
+
+							pegSolitaireCopy.getNextState([i, j], config.DIRECTION[direction])
+							hn = heuristic(pegSolitaireCopy)
+							gn = pegSolitaireCopy.nodesExpanded
+							#pq.put((hn+gn, pegSolitaireCopy))
+							print "gn hn for state ", i, j, direction
+							print hn, gn
+							pq.put((-(hn+gn), pegSolitaireCopy))
+			
+
+
+	return False	
 
 def aStarTwo(pegSolitaireObject):
 	#################################################

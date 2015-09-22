@@ -49,9 +49,11 @@ class game:
 	
 	
 	def is_validMove(self, oldPos, direction):
-		
+		print "in valid move"
+		print oldPos, direction		
 		# or new move is outside peg Board
 		newPos = self.getNextPosition(oldPos, direction)
+		print newPos
 		if (newPos[0] < 0 or newPos[0] > 6) or (newPos < 0 or newPos[1] > 6) :
 			print "out of board"
 			return False		
